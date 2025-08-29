@@ -1,4 +1,4 @@
-import { getAuthHeaders } from './api'
+import { getAuthHeaders } from '../utils/apiUtils'
 import { getApiUrl } from '../utils/apiUtils'
 
 export const getMe = async () => {
