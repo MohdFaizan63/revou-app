@@ -1,4 +1,5 @@
 import { apiRequest } from './api'
+import { getApiUrl } from '../utils/apiUtils'
 
 // Get user profile
 export const getUserProfile = async () => {
@@ -25,7 +26,7 @@ export const uploadAvatar = async (avatarData) => {
     formData.append('avatarUrl', avatarData.url)
   }
   
-  const response = await fetch('/api/users/avatar', {
+  const response = await fetch(getApiUrl('/api/users/avatar'), {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem('token')}`,

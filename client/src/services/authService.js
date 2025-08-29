@@ -1,7 +1,8 @@
 import { getAuthHeaders } from './api'
+import { getApiUrl } from '../utils/apiUtils'
 
 export const getMe = async () => {
-  const response = await fetch('/api/auth/me', {
+  const response = await fetch(getApiUrl('/api/auth/me'), {
     headers: getAuthHeaders(),
   })
   
@@ -13,7 +14,7 @@ export const getMe = async () => {
 }
 
 export const changePassword = async (currentPassword, newPassword) => {
-  const response = await fetch('/api/auth/password', {
+  const response = await fetch(getApiUrl('/api/auth/password'), {
     method: 'PUT',
     headers: {
       ...getAuthHeaders(),

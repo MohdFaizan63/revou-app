@@ -1,10 +1,4 @@
-export const getAuthHeaders = () => {
-  const token = localStorage.getItem('token')
-  return {
-    'Authorization': token ? `Bearer ${token}` : '',
-    'Content-Type': 'application/json',
-  }
-}
+import { getApiBaseUrl, getAuthHeaders } from '../utils/apiUtils'
 
 export const handleApiError = async (response) => {
   if (!response.ok) {
@@ -24,6 +18,9 @@ export const handleApiError = async (response) => {
 }
 
 export const apiRequest = async (url, options = {}) => {
+  // Prepend the base API URL to relative URLs
+  const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url}`
+  
   const config = {
     headers: getAuthHeaders(),
     ...options,
@@ -36,7 +33,7 @@ export const apiRequest = async (url, options = {}) => {
   }
 
   try {
-    const response = await fetch(url, config)
+    const response = await fetch(fullUrl, config)
     return handleApiError(response)
   } catch (error) {
     // Handle network errors

@@ -1,4 +1,5 @@
 import { apiRequest } from './api'
+import { getApiUrl } from '../utils/apiUtils'
 
 export const getPosts = async (params = {}) => {
   const searchParams = new URLSearchParams()
@@ -27,7 +28,7 @@ export const createPost = async (postData) => {
       'Authorization': token ? `Bearer ${token}` : '',
     }
     
-    const response = await fetch('/api/posts', {
+    const response = await fetch(getApiUrl('/api/posts'), {
       method: 'POST',
       headers,
       body: postData

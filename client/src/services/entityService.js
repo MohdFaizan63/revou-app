@@ -1,4 +1,5 @@
 import { apiRequest } from './api'
+import { getApiUrl } from '../utils/apiUtils'
 
 export const getEntities = async (params = {}) => {
   const searchParams = new URLSearchParams()
@@ -45,7 +46,7 @@ export const createEntity = async (entityData) => {
       // Don't set Content-Type for FormData - browser will set it with boundary
     }
     
-    const response = await fetch('/api/entities', {
+    const response = await fetch(getApiUrl('/api/entities'), {
       method: 'POST',
       headers,
       body: entityData
