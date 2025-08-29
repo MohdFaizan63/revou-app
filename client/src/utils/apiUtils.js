@@ -8,10 +8,17 @@ export const getApiBaseUrl = () => {
   return '';
 };
 
-// Construct full API URLs
+// Construct full API URLs (handles duplicate /api issue)
 export const getApiUrl = (endpoint) => {
   const base = getApiBaseUrl();
-  return `${base}${endpoint}`;
+
+  // If endpoint already starts with /api, append as is
+  if (endpoint.startsWith('/api')) {
+    return `${base}${endpoint}`;
+  }
+
+  // Otherwise, add /api prefix
+  return `${base}/api${endpoint}`;
 };
 
 // Get authorization headers
