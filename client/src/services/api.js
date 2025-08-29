@@ -1,51 +1,48 @@
-import { getApiBaseUrl, getAuthHeaders } from '../utils/apiUtils'
+import { Routes, Route } from 'react-router-dom'
+import { useAuth } from './context/AuthContext'
+import Layout from './components/Layout'
+import Home from './pages/Home'
+import Posts from './pages/Posts'
+import EntityDetail from './pages/EntityDetail'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Profile from './pages/Profile'
+import Categories from './pages/Categories'
+import Compare from './pages/Compare'
+import HelpCenter from './pages/HelpCenter'
+import Contact from './pages/Contact'
+import ProtectedRoute from './components/ProtectedRoute'
+import DebugInfo from './components/DebugInfo'
+import BackendTest from './components/BackendTest'
 
-export const handleApiError = async (response) => {
-  if (!response.ok) {
-    let errorMessage = 'An error occurred'
-    
-    try {
-      const errorData = await response.json()
-      errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`
-    } catch (parseError) {
-      // If we can't parse the error response, use status text
-      errorMessage = response.statusText || `HTTP error! status: ${response.status}`
-    }
-    
-    throw new Error(errorMessage)
-  }
-  return response
+function App() {
+  const { user } = useAuth()
+
+  return (
+    <Layout>
+      <DebugInfo />
+      <BackendTest />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/posts" element={<Posts />} />
+        <Route path="/entity/:id" element={<EntityDetail />} />
+        <Route path="/categories" element={<Categories />} />
+        <Route path="/compare" element={<Compare />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
+    </Layout>
+  )
 }
 
-export const apiRequest = async (url, options = {}) => {
-  // Prepend the base API URL to relative URLs
-  const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url}`
-  
-  const config = {
-    headers: getAuthHeaders(),
-    ...options,
-  }
-
-  // Handle data parameter for JSON requests
-  if (options.data && !options.body) {
-    config.body = JSON.stringify(options.data)
-    config.headers['Content-Type'] = 'application/json'
-  }
-
-  try {
-    const response = await fetch(fullUrl, config)
-    return handleApiError(response)
-  } catch (error) {
-    // Handle network errors
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Network error: Unable to connect to the server. Please check your internet connection.')
-    }
-    throw error
-  }
-}
-
-// Helper function to handle API responses
-export const handleApiResponse = async (response) => {
-  const data = await response.json()
-  return data
-}
+export default App

@@ -1,25 +1,32 @@
-// Utility function to get the base API URL
-export const getApiBaseUrl = () => {
-  // In production, use the environment variable
-  if (import.meta.env.PROD && import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
+import { getAuthHeaders } from '../utils/apiUtils'
+import { getApiUrl } from '../utils/apiUtils'
+
+export const getMe = async () => {
+  const response = await fetch(getApiUrl('/api/auth/me'), {
+    headers: getAuthHeaders(),
+  })
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch user data')
   }
-  // In development, use relative URLs (works with Vite proxy)
-  return ''
+  
+  return response.json()
 }
 
-// Utility function to construct full API URLs
-export const getApiUrl = (endpoint) => {
-  const baseUrl = getApiBaseUrl()
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
-  return `${baseUrl}${cleanEndpoint}`
-}
-
-// Utility function to get auth headers
-export const getAuthHeaders = () => {
-  const token = localStorage.getItem('token')
-  return {
-    'Authorization': token ? `Bearer ${token}` : '',
-    'Content-Type': 'application/json',
+export const changePassword = async (currentPassword, newPassword) => {
+  const response = await fetch(getApiUrl('/api/auth/password'), {
+    method: 'PUT',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.message || 'Failed to change password')
   }
+  
+  return response.json()
 }
