@@ -1,0 +1,49 @@
+{
+  "name": "revuo",
+  "version": "1.0.0",
+  "description": "A modern platform for rating and reviewing entities - places, apps, websites, movies, products, and services",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "start": "cd server && npm start",
+    "start:prod": "NODE_ENV=production cd server && npm start",
+    "setup-atlas": "./setup-atlas.sh",
+    "test": "cd server && npm test",
+    "test:client": "cd client && npm run test",
+    "lint": "cd client && npm run lint",
+    "lint:fix": "cd client && npm run lint -- --fix",
+    "clean": "rm -rf client/dist server/dist",
+    "clean:all": "rm -rf node_modules client/node_modules server/node_modules client/dist server/dist",
+    "deploy:check": "npm run lint && npm run test && npm run build",
+    "seed": "cd server && npm run seed",
+    "logs": "cd server && npm run logs",
+    "health": "curl -f http://localhost:5001/api/health || echo 'Server not running'"
+  },
+  "keywords": [
+    "review",
+    "rating",
+    "platform",
+    "mern",
+    "startup",
+    "react",
+    "nodejs",
+    "mongodb"
+  ],
+  "author": "Revuo Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "multer-storage-cloudinary": "^4.0.0"
+  }
+}

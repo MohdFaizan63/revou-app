@@ -1,0 +1,79 @@
+services:
+  # Backend API Service
+  - type: web
+    name: revuo-backend
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://revuo-frontend.onrender.com
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+  # Frontend Static Site
+  - type: web
+    name: revuo-frontend
+    env: static
+    plan: free
+    buildCommand: npm run install-all && npm run build
+    staticPublishPath: ./client/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://revuo-backend.onrender.com/api
+      - key: VITE_APP_NAME
+        value: Revuo
+      - key: VITE_APP_VERSION
+        value: 1.0.0services:
+  # Backend API Service
+  - type: web
+    name: revuo-backend
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://revuo-frontend.onrender.com
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+  # Frontend Static Site
+  - type: web
+    name: revuo-frontend
+    env: static
+    plan: free
+    buildCommand: npm run install-all && npm run build
+    staticPublishPath: ./client/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://revuo-backend.onrender.com/api
+      - key: VITE_APP_NAME
+        value: Revuo
+      - key: VITE_APP_VERSION
+        value: 1.0.0
