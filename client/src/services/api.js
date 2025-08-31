@@ -1,4 +1,4 @@
-import { getApiBaseUrl, getAuthHeaders } from '../utils/apiUtils'
+import { getApiUrl, getAuthHeaders } from '../utils/apiUtils'
 
 export const handleApiError = async (response) => {
   if (!response.ok) {
@@ -18,8 +18,8 @@ export const handleApiError = async (response) => {
 }
 
 export const apiRequest = async (url, options = {}) => {
-  // Prepend the base API URL to relative URLs
-  const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url}`
+  // Use getApiUrl to handle the URL construction properly
+  const fullUrl = url.startsWith('http') ? url : getApiUrl(url)
   
   console.log('🚀 API Request Debug:')
   console.log('  - Original URL:', url)

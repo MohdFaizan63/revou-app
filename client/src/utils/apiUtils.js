@@ -12,8 +12,12 @@ export const getApiBaseUrl = () => {
 export const getApiUrl = (endpoint) => {
   const base = getApiBaseUrl();
 
-  // If endpoint already starts with /api, append as is
+  // If endpoint already starts with /api, check if base already ends with /api
   if (endpoint.startsWith('/api')) {
+    // If base already ends with /api, remove the /api from endpoint to avoid duplication
+    if (base.endsWith('/api')) {
+      return `${base}${endpoint.substring(4)}`; // Remove '/api' from endpoint
+    }
     return `${base}${endpoint}`;
   }
 
