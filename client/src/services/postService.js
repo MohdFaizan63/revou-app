@@ -12,12 +12,12 @@ export const getPosts = async (params = {}) => {
   
   const url = `/api/posts?${searchParams.toString()}`
   const response = await apiRequest(url)
-  return response.json()
+  return await response.json()
 }
 
 export const getPost = async (id) => {
   const response = await apiRequest(`/api/posts/${id}`)
-  return response.json()
+  return await response.json()
 }
 
 export const createPost = async (postData) => {
@@ -39,7 +39,7 @@ export const createPost = async (postData) => {
       throw new Error(errorData.message || 'Failed to create post')
     }
     
-    return response.json()
+    return await response.json()
   } else {
     // For regular JSON data
     const response = await apiRequest('/api/posts', {
@@ -49,7 +49,7 @@ export const createPost = async (postData) => {
         'Content-Type': 'application/json'
       }
     })
-    return response.json()
+    return await response.json()
   }
 }
 
@@ -58,21 +58,21 @@ export const updatePost = async (id, postData) => {
     method: 'PUT',
     data: postData
   })
-  return response.json()
+  return await response.json()
 }
 
 export const deletePost = async (id) => {
   const response = await apiRequest(`/api/posts/${id}`, {
     method: 'DELETE'
   })
-  return response.json()
+  return await response.json()
 }
 
 export const toggleLike = async (id) => {
   const response = await apiRequest(`/api/posts/${id}/like`, {
     method: 'POST'
   })
-  return response.json()
+  return await response.json()
 }
 
 export const addComment = async (id, content) => {
@@ -80,7 +80,7 @@ export const addComment = async (id, content) => {
     method: 'POST',
     data: { content }
   })
-  return response.json()
+  return await response.json()
 }
 
 export const getUserPosts = async (userId, params = {}) => {
@@ -94,5 +94,5 @@ export const getUserPosts = async (userId, params = {}) => {
   
   const url = `/api/posts/user/${userId}?${searchParams.toString()}`
   const response = await apiRequest(url)
-  return response.json()
+  return await response.json()
 }

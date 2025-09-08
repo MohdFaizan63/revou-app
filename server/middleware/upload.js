@@ -110,6 +110,11 @@ const uploadFromUrl = async (imageUrl) => {
 // Helper function to upload file buffer to Cloudinary
 const uploadBuffer = async (buffer, filename) => {
   try {
+    // Validate buffer
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Invalid file buffer')
+    }
+
     // Check if Cloudinary is configured
     if (!process.env.CLOUDINARY_CLOUD_NAME) {
       console.warn('Cloudinary not configured, creating data URL')
@@ -119,19 +124,23 @@ const uploadBuffer = async (buffer, filename) => {
       return `data:${mimeType};base64,${base64}`
     }
     
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload_stream({
-      folder: 'revuo',
-      transformation: [{ width: 500, height: 500, crop: 'limit' }]
-    }, (error, result) => {
-      if (error) {
-        console.error('Cloudinary upload error:', error)
-        throw error
-      }
-      return result
-    }).end(buffer)
-    
-    return result.secure_url
+    // Upload to Cloudinary with promise wrapper
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream({
+        folder: 'revuo',
+        public_id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        transformation: [{ width: 500, height: 500, crop: 'limit' }]
+      }, (error, result) => {
+        if (error) {
+          console.error('Cloudinary upload error:', error)
+          reject(error)
+        } else {
+          resolve(result.secure_url)
+        }
+      })
+      
+      uploadStream.end(buffer)
+    })
   } catch (error) {
     console.error('Error uploading buffer:', error)
     // Fallback to data URL

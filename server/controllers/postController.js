@@ -54,9 +54,13 @@ const getPosts = async (req, res) => {
     // Add computed fields
     const postsWithComputed = posts.map(post => ({
       ...post,
-      isLiked: req.user ? post.likes.some(like => like.user && like.user._id && like.user._id.toString() === req.user._id.toString()) : false,
-      likeCount: post.likes.length,
-      commentCount: post.comments.length
+      isLiked: req.user && post.likes ? post.likes.some(like => 
+        like.user && 
+        like.user._id && 
+        like.user._id.toString() === req.user._id.toString()
+      ) : false,
+      likeCount: post.likes ? post.likes.length : 0,
+      commentCount: post.comments ? post.comments.length : 0
     }));
 
     res.json({
@@ -96,9 +100,13 @@ const getPost = async (req, res) => {
     // Add computed fields
     const postWithComputed = {
       ...post.toObject(),
-      isLiked: req.user ? post.likes.some(like => like.user && like.user._id && like.user._id.toString() === req.user._id.toString()) : false,
-      likeCount: post.likes.length,
-      commentCount: post.comments.length
+      isLiked: req.user && post.likes ? post.likes.some(like => 
+        like.user && 
+        like.user._id && 
+        like.user._id.toString() === req.user._id.toString()
+      ) : false,
+      likeCount: post.likes ? post.likes.length : 0,
+      commentCount: post.comments ? post.comments.length : 0
     };
 
     res.json(postWithComputed);
@@ -136,12 +144,18 @@ const createPost = async (req, res) => {
             // Handle file path upload
             mediaUrl = await uploadFromUrl(file.path);
           } else {
-            console.error('No file buffer or path found');
+            console.error('No file buffer or path found for file:', file.originalname);
             continue;
           }
-          mediaUrls.push(mediaUrl);
+          
+          if (mediaUrl) {
+            mediaUrls.push(mediaUrl);
+          } else {
+            console.error('Failed to upload file:', file.originalname);
+          }
         } catch (error) {
-          console.error('Media upload error:', error);
+          console.error('Media upload error for file:', file.originalname, error);
+          // Continue processing other files instead of failing the entire post
         }
       }
     }
@@ -236,9 +250,19 @@ const updatePost = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this post' });
     }
 
+    // Validate and sanitize update data
+    const allowedUpdates = ['content', 'tags', 'isPublic'];
+    const updates = {};
+    
+    Object.keys(req.body).forEach(key => {
+      if (allowedUpdates.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    });
+
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updates,
       { new: true, runValidators: true }
     )
     .populate('user', 'username avatar')
@@ -256,6 +280,11 @@ const updatePost = async (req, res) => {
 // @access  Private
 const deletePost = async (req, res) => {
   try {
+    // Validate post ID
+    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid post ID' });
+    }
+
     const post = await Post.findById(req.params.id);
 
     if (!post) {
@@ -267,11 +296,22 @@ const deletePost = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
 
-    await post.remove();
+    // Delete the post using findByIdAndDelete (recommended method)
+    const deletedPost = await Post.findByIdAndDelete(req.params.id);
 
-    res.json({ message: 'Post removed' });
+    if (!deletedPost) {
+      return res.status(404).json({ message: 'Post not found or already deleted' });
+    }
+
+    res.json({ message: 'Post deleted successfully' });
   } catch (error) {
     console.error('Delete post error:', error);
+    
+    // Handle specific error types
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid post ID format' });
+    }
+    
     res.status(500).json({ message: 'Server error deleting post' });
   }
 };
@@ -281,13 +321,20 @@ const deletePost = async (req, res) => {
 // @access  Private
 const toggleLike = async (req, res) => {
   try {
+    // Validate post ID
+    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid post ID' });
+    }
+
     const post = await Post.findById(req.params.id);
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const isLiked = post.likes.some(like => like.user.toString() === req.user._id.toString());
+    const isLiked = post.likes && post.likes.some(like => 
+      like.user && like.user.toString() === req.user._id.toString()
+    );
 
     if (isLiked) {
       await post.removeLike(req.user._id);
@@ -298,6 +345,12 @@ const toggleLike = async (req, res) => {
     }
   } catch (error) {
     console.error('Toggle like error:', error);
+    
+    // Handle specific error types
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid post ID format' });
+    }
+    
     res.status(500).json({ message: 'Server error toggling like' });
   }
 };
@@ -307,10 +360,19 @@ const toggleLike = async (req, res) => {
 // @access  Private
 const addComment = async (req, res) => {
   try {
+    // Validate post ID
+    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid post ID' });
+    }
+
     const { content } = req.body;
 
     if (!content || content.trim().length === 0) {
       return res.status(400).json({ message: 'Comment content is required' });
+    }
+
+    if (content.trim().length > 500) {
+      return res.status(400).json({ message: 'Comment cannot exceed 500 characters' });
     }
 
     const post = await Post.findById(req.params.id);
@@ -330,6 +392,12 @@ const addComment = async (req, res) => {
     res.json(updatedPost);
   } catch (error) {
     console.error('Add comment error:', error);
+    
+    // Handle specific error types
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid post ID format' });
+    }
+    
     res.status(500).json({ message: 'Server error adding comment' });
   }
 };
@@ -346,7 +414,7 @@ const getUserPosts = async (req, res) => {
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    const query = { user: userId, isPublic: true, user: { $exists: true, $ne: null } };
+    const query = { user: userId, isPublic: true };
 
     const [posts, total] = await Promise.all([
       Post.find(query)
@@ -365,9 +433,13 @@ const getUserPosts = async (req, res) => {
     // Add computed fields
     const postsWithComputed = posts.map(post => ({
       ...post,
-      isLiked: req.user ? post.likes.some(like => like.user && like.user._id && like.user._id.toString() === req.user._id.toString()) : false,
-      likeCount: post.likes.length,
-      commentCount: post.comments.length
+      isLiked: req.user && post.likes ? post.likes.some(like => 
+        like.user && 
+        like.user._id && 
+        like.user._id.toString() === req.user._id.toString()
+      ) : false,
+      likeCount: post.likes ? post.likes.length : 0,
+      commentCount: post.comments ? post.comments.length : 0
     }));
 
     res.json({

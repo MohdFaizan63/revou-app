@@ -26,6 +26,7 @@ import {
 import { getPosts, toggleLike, addComment, deletePost, createPost } from '../services/postService'
 import { useAuth } from '../context/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
+import PostErrorBoundary from '../components/PostErrorBoundary'
 
 const Posts = () => {
   const { user } = useAuth()
@@ -412,57 +413,59 @@ const Posts = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Posts</h1>
-            {user && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors touch-button"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Create Post</span>
-                <span className="sm:hidden">Post</span>
-              </button>
-            )}
+    <PostErrorBoundary>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+          <div className="max-w-2xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Posts</h1>
+              {user && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors touch-button"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Create Post</span>
+                  <span className="sm:hidden">Post</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Posts Feed */}
-      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
-        {postsData?.posts?.length === 0 ? (
-          <div className="text-center py-8 sm:py-12">
-            <div className="text-gray-500 mb-4">No posts yet</div>
-            {user && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 touch-button"
-              >
-                Create the first post
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4 sm:space-y-6">
-            {postsData?.posts?.map((post) => (
-              <PostCard key={post._id} post={post} />
-            ))}
-          </div>
+        {/* Posts Feed */}
+        <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
+          {postsData?.posts?.length === 0 ? (
+            <div className="text-center py-8 sm:py-12">
+              <div className="text-gray-500 mb-4">No posts yet</div>
+              {user && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 touch-button"
+                >
+                  Create the first post
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4 sm:space-y-6">
+              {postsData?.posts?.map((post) => (
+                <PostCard key={post._id} post={post} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Create Post Modal */}
+        {showCreateModal && (
+          <CreatePostModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+          />
         )}
       </div>
-
-      {/* Create Post Modal */}
-      {showCreateModal && (
-        <CreatePostModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-        />
-      )}
-    </div>
+    </PostErrorBoundary>
   )
 }
 
@@ -539,8 +542,24 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   }
 
   const removeMedia = (index) => {
+    // Revoke object URL to prevent memory leak
+    const fileToRemove = mediaFiles[index]
+    if (fileToRemove && fileToRemove.preview) {
+      URL.revokeObjectURL(fileToRemove.preview)
+    }
     setMediaFiles(mediaFiles.filter((_, i) => i !== index))
   }
+
+  // Cleanup object URLs on component unmount
+  useEffect(() => {
+    return () => {
+      mediaFiles.forEach(file => {
+        if (file.preview) {
+          URL.revokeObjectURL(file.preview)
+        }
+      })
+    }
+  }, [mediaFiles])
 
   if (!isOpen) return null
 
@@ -626,22 +645,29 @@ const CreatePostModal = ({ isOpen, onClose }) => {
             {/* Media Preview */}
             {mediaFiles.length > 0 && (
               <div className="mt-4 grid grid-cols-3 gap-2">
-                {mediaFiles.map((file, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeMedia(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+                {mediaFiles.map((file, index) => {
+                  // Create preview URL and store it on the file object
+                  if (!file.preview) {
+                    file.preview = URL.createObjectURL(file)
+                  }
+                  
+                  return (
+                    <div key={index} className="relative">
+                      <img
+                        src={file.preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeMedia(index)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
