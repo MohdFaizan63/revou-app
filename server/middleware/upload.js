@@ -32,12 +32,33 @@ const upload = multer({
 // Middleware for single file upload
 const uploadSingle = upload.single('logo')
 
-// Wrapper to handle multer errors
+// Middleware for multiple file uploads (for posts)
+const uploadMultiple = upload.array('media', 10) // Allow up to 10 files
+
+// Wrapper to handle multer errors for single upload
 const handleUpload = (req, res, next) => {
   uploadSingle(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ message: 'File size too large. Maximum 5MB allowed.' })
+      }
+      return res.status(400).json({ message: 'File upload error' })
+    } else if (err) {
+      return res.status(400).json({ message: err.message })
+    }
+    next()
+  })
+}
+
+// Wrapper to handle multer errors for multiple uploads
+const handleMultipleUpload = (req, res, next) => {
+  uploadMultiple(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: 'File size too large. Maximum 5MB allowed per file.' })
+      }
+      if (err.code === 'LIMIT_FILE_COUNT') {
+        return res.status(400).json({ message: 'Too many files. Maximum 10 files allowed.' })
       }
       return res.status(400).json({ message: 'File upload error' })
     } else if (err) {
@@ -152,6 +173,7 @@ const uploadBuffer = async (buffer, filename) => {
 
 module.exports = {
   handleUpload,
+  handleMultipleUpload,
   handleAvatarUpload,
   uploadFromUrl,
   uploadBuffer,

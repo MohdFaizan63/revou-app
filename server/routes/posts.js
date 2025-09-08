@@ -10,7 +10,7 @@ const {
   getUserPosts
 } = require('../controllers/postController');
 const { protect, optionalAuth } = require('../middleware/auth');
-const { handleUpload } = require('../middleware/upload');
+const { handleUpload, handleMultipleUpload } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -49,7 +49,7 @@ router.get('/:id', optionalAuth, getPost);
 router.get('/user/:userId', optionalAuth, getUserPosts);
 
 // Protected routes
-router.post('/', protect, handleUpload.array('media', 10), validatePost, createPost);
+router.post('/', protect, handleMultipleUpload, validatePost, createPost);
 router.put('/:id', protect, validatePost, updatePost);
 router.delete('/:id', protect, deletePost);
 router.post('/:id/like', protect, toggleLike);
