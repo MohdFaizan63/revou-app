@@ -31,6 +31,20 @@ services:
     plan: free
     buildCommand: npm run install-all && npm run build
     staticPublishPath: ./client/dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         value: https://revuo-backend.onrender.com/api

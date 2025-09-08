@@ -36,6 +36,8 @@ export default defineConfig({
       },
     },
   },
+  // Add base path for production
+  base: process.env.NODE_ENV === 'production' ? '/' : '/',
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', 'lucide-react'],
   },

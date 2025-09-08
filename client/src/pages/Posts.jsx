@@ -218,6 +218,13 @@ const Posts = () => {
                   src={post.media[0]}
                   alt="Post media"
                   className="w-full rounded-xl object-cover max-h-64 sm:max-h-96"
+                  onError={(e) => {
+                    console.error('Image load error:', post.media[0]);
+                    e.target.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('Image loaded successfully:', post.media[0]);
+                  }}
                 />
               ) : (
                 <div className="grid grid-cols-2 gap-2">
@@ -227,6 +234,13 @@ const Posts = () => {
                       src={media}
                       alt={`Post media ${index + 1}`}
                       className="w-full h-24 sm:h-32 rounded-lg object-cover"
+                      onError={(e) => {
+                        console.error('Image load error:', media);
+                        e.target.style.display = 'none';
+                      }}
+                      onLoad={() => {
+                        console.log('Image loaded successfully:', media);
+                      }}
                     />
                   ))}
                 </div>
@@ -480,12 +494,14 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const createPostMutation = useMutation(createPost, {
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Post created successfully:', data)
       queryClient.invalidateQueries(['posts'])
       toast.success('Post created successfully!')
       handleClose()
     },
     onError: (error) => {
+      console.error('Post creation error:', error)
       toast.error(error.message || 'Failed to create post')
     }
   })
