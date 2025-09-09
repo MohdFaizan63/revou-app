@@ -2,7 +2,7 @@
 
 A modern, responsive platform for rating and reviewing anything and everything - from apps to restaurants, movies to products, and beyond.
 
-![Revuo Platform](https://img.shields.io/badge/Revuo-Universal%20Reviews-blue?style=for-the-badge&logo=star)
+![Revuo Platform](https://img.shields.io/badge/Revuo-Universal%20Reviews-blue?style=for-the-badge&logo=star>
 ![React](https://img.shields.io/badge/React-18.2.0-61DAFB?style=flat-square&logo=react)
 ![Node.js](https://img.shields.io/badge/Node.js-16+-339933?style=flat-square&logo=node.js)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb)
