@@ -16,7 +16,7 @@ A modern, responsive platform for rating and reviewing anything and everything -
 - 📊 **Analytics** - View counts, rating distributions, and trends
 - 🔄 **Compare Entities** - Side-by-side comparison of any items
 - 📧 **Contact System** - Built-in help center and contact forms
-- 🎨 **Modern UI** - Beautiful, intuitive interface with animations
+- 🎨 **Modern UI** - Beautiful, intuitive interface with animations,
 - ⚡ **Performance Optimized** - Fast loading with React Query caching
 - 🛡️ **Production Ready** - Security, error handling, and monitoring
 
