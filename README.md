@@ -275,6 +275,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Tailwind CSS for the utility-first approach
 - All contributors and users
 
----
+----
 
 **Built with ❤️ by the Revuo Team**
