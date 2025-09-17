@@ -263,7 +263,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 **Support**
 
-- **Documentation**: [DEPLOYMENT.md](./DEPLOYMENT.md)
+- **Documentation**:- [DEPLOYMENT.md](./DEPLOYMENT.md)
 - **Issues**: [GitHub Issues](https://github.com/yourusername/revuo/issues)
 - **Email**: support@revuo.com
 
