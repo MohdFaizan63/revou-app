@@ -91,14 +91,32 @@ reviewSchema.set('toJSON', { virtuals: true })
 reviewSchema.set('toObject', { virtuals: true })
 
 // Static method to get average rating for an entity
-reviewSchema.statics.getAverageRating = async function(entityId) {
+ /*reviewSchema.statics.getAverageRating = async function(entityId) {
   const result = await this.aggregate([
     { $match: { entity: entityId } },
     { $group: { _id: null, avgRating: { $avg: '$rating' }, count: { $sum: 1 } } }
   ])
   
   return result.length > 0 ? { averageRating: result[0].avgRating, totalReviews: result[0].count } : { averageRating: 0, totalReviews: 0 }
+}.  */
+
+reviewSchema.statics.getAverageRating = async function(entityId) {
+  const result = await this.aggregate([
+    { $match: { entity: new mongoose.Types.ObjectId(entityId) } },
+    {
+      $group: {
+        _id: null,
+        avgRating: { $avg: '$rating' },
+        count: { $sum: 1 }
+      }
+    }
+  ])
+
+  return result.length > 0
+    ? { averageRating: result[0].avgRating, totalReviews: result[0].count }
+    : { averageRating: 0, totalReviews: 0 }
 }
+
 
 // Instance method to add/update vote
 reviewSchema.methods.addVote = function(userId, voteType) {

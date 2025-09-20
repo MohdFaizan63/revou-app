@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { toast } from 'react-hot-toast'
@@ -20,7 +20,8 @@ import {
   ExternalLink,
   MoreHorizontal
 } from 'lucide-react'
-import { getEntity, createReview, voteReview } from '../services/entityService'
+import { getEntity, toggleBookmark, checkBookmark } from '../services/entityService'
+import { createReview, voteReview } from '../services/reviewService'
 import { useAuth } from '../context/AuthContext'
 import ReviewForm from '../components/ReviewForm'
 import ReviewCard from '../components/ReviewCard'
@@ -35,13 +36,19 @@ const EntityDetail = () => {
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [selectedRating, setSelectedRating] = useState(0)
   const [isHovering, setIsHovering] = useState(0)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [bookmarkLoading, setBookmarkLoading] = useState(false)
 
   // Fetch entity data
   const { data: entity, isLoading, error } = useQuery(
     ['entity', id],
     () => getEntity(id),
     {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: 3,
+      retryDelay: 1000,
+      refetchOnWindowFocus: false,
     }
   )
 
@@ -50,10 +57,12 @@ const EntityDetail = () => {
     onSuccess: () => {
       toast.success('Review submitted successfully!')
       queryClient.invalidateQueries(['entity', id])
+      queryClient.invalidateQueries(['user-reviews'])
       setShowReviewForm(false)
       setSelectedRating(0)
     },
     onError: (error) => {
+      console.error('Review creation error:', error)
       toast.error(error.message || 'Failed to submit review')
     }
   })
@@ -68,11 +77,32 @@ const EntityDetail = () => {
     }
   })
 
+  // Check bookmark status on load
+  useEffect(() => {
+    if (user && entity) {
+      checkBookmark(entity._id)
+        .then(data => setIsBookmarked(data.bookmarked))
+        .catch(error => console.error('Error checking bookmark:', error))
+    }
+  }, [user, entity])
+
+  // Bookmark mutation
+  const bookmarkMutation = useMutation(toggleBookmark, {
+    onSuccess: (data) => {
+      setIsBookmarked(data.bookmarked)
+      toast.success(data.bookmarked ? 'Entity bookmarked!' : 'Bookmark removed!')
+      queryClient.invalidateQueries(['user-bookmarks'])
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update bookmark')
+    }
+  })
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading entity details...</p>
         </div>
       </div>
@@ -111,6 +141,14 @@ const EntityDetail = () => {
       return
     }
     voteMutation.mutate({ reviewId, voteType })
+  }
+
+  const handleBookmark = () => {
+    if (!user) {
+      toast.error('Please login to bookmark')
+      return
+    }
+    bookmarkMutation.mutate(entity._id)
   }
 
   const handleShare = () => {
@@ -153,8 +191,16 @@ const EntityDetail = () => {
                >
                  <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                </button>
-               <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors touch-button">
-                 <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+               <button 
+                 onClick={handleBookmark}
+                 disabled={bookmarkMutation.isLoading}
+                 className={`p-2 rounded-lg hover:bg-gray-100 transition-colors touch-button ${
+                   isBookmarked ? 'text-blue-600' : 'text-gray-600'
+                 }`}
+               >
+                 <Bookmark className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                   isBookmarked ? 'fill-current' : ''
+                 }`} />
                </button>
                <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors touch-button">
                  <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />

@@ -39,19 +39,23 @@ const Layout = ({ children }) => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive(item.href)
-                      ? 'text-blue-600 bg-blue-50 shadow-sm'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navigation.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      isActive(item.href)
+                        ? 'text-blue-600 bg-blue-50 shadow-sm'
+                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {Icon && <Icon className="w-4 h-4" />}
+                    <span>{item.name}</span>
+                  </Link>
+                )
+              })}
             </nav>
 
             {/* User Actions */}
@@ -138,20 +142,24 @@ const Layout = ({ children }) => {
           {isMenuOpen && (
             <div className="md:hidden border-t border-gray-100 py-4">
               <nav className="space-y-2">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`block px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 touch-button ${
-                      isActive(item.href)
-                        ? 'text-blue-600 bg-blue-50 shadow-sm'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+                {navigation.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`block px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 touch-button flex items-center space-x-3 ${
+                        isActive(item.href)
+                          ? 'text-blue-600 bg-blue-50 shadow-sm'
+                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {Icon && <Icon className="w-5 h-5" />}
+                      <span>{item.name}</span>
+                    </Link>
+                  )
+                })}
                 {user && (
                   <>
                     <Link

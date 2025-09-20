@@ -148,7 +148,7 @@ entitySchema.virtual('ratingPercentage').get(function() {
 });
 
 // Method to update average rating
-entitySchema.methods.updateAverageRating = function() {
+entitySchema.methods.updateAverageRating = async function() {
   const total = Object.values(this.ratingDistribution).reduce((sum, count) => sum + count, 0);
   if (total === 0) {
     this.averageRating = 0;
@@ -158,7 +158,17 @@ entitySchema.methods.updateAverageRating = function() {
     this.averageRating = Math.round((weightedSum / total) * 10) / 10;
   }
   this.totalReviews = total;
-  return this.save();
+  
+  // Use findByIdAndUpdate to avoid parallel save issues
+  return await Entity.findByIdAndUpdate(
+    this._id,
+    {
+      averageRating: this.averageRating,
+      totalReviews: this.totalReviews,
+      ratingDistribution: this.ratingDistribution
+    },
+    { new: true }
+  );
 };
 
 // Method to increment view count
@@ -168,9 +178,13 @@ entitySchema.methods.incrementViewCount = function() {
 };
 
 // Pre-save middleware to ensure rating distribution is valid
-entitySchema.pre('save', function(next) {
+entitySchema.pre('save', async function(next) {
   if (this.isModified('ratingDistribution')) {
-    this.updateAverageRating();
+    try {
+      await this.updateAverageRating();
+    } catch (error) {
+      console.error('Error updating average rating:', error);
+    }
   }
   next();
 });

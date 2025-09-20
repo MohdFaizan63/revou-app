@@ -3,12 +3,12 @@ import { useQuery } from 'react-query'
 import { Link } from 'react-router-dom'
 import { Search, Star, Globe, ExternalLink, Plus, Eye, TrendingUp, Sparkles } from 'lucide-react'
 import { instantSearch } from '../services/entityService'
-import { searchExternal } from '../services/externalSearchService'
+import { performSmartSearch } from '../services/externalSearchService'
 import WebPreviewCard from './WebPreviewCard'
 
 const SearchBar = ({ onAddToRevuo }) => {
   const [query, setQuery] = useState('')
-  const [webPreview, setWebPreview] = useState(null)
+  const [smartSearchResult, setSmartSearchResult] = useState(null)
   const [isLoadingExternal, setIsLoadingExternal] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -50,22 +50,23 @@ const SearchBar = ({ onAddToRevuo }) => {
     }
   )
 
-  // External search for web preview
+  // Smart search for Wikipedia + external data
   useEffect(() => {
     if (debouncedQuery.length >= 2) {
       setIsLoadingExternal(true)
-      searchExternal(debouncedQuery)
+      performSmartSearch(debouncedQuery)
         .then(result => {
-          setWebPreview(result)
+          setSmartSearchResult(result)
         })
         .catch(error => {
-          console.error('External search error:', error)
+          console.error('Smart search error:', error)
+          setSmartSearchResult(null)
         })
         .finally(() => {
           setIsLoadingExternal(false)
         })
     } else {
-      setWebPreview(null)
+      setSmartSearchResult(null)
     }
   }, [debouncedQuery])
 
@@ -102,7 +103,7 @@ const SearchBar = ({ onAddToRevuo }) => {
       description: data.description || `Information about ${cleanTitle}`,
       category,
       website,
-      logoUrl: data.imageUrl || data.logo
+      logoUrl: data.imageUrl || data.logo || data.thumbnail
     })
   }
 
@@ -206,7 +207,7 @@ const SearchBar = ({ onAddToRevuo }) => {
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           onKeyDown={handleKeyDown}
-          placeholder="Search for anything - apps, restaurants, movies, products..."
+          placeholder="Search entities, places, or topics..."
           className="block w-full pl-12 pr-12 py-4 text-lg bg-white border-0 rounded-2xl shadow-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200 placeholder-gray-500"
         />
         {query && (
@@ -296,24 +297,66 @@ const SearchBar = ({ onAddToRevuo }) => {
             </div>
           )}
 
-          {/* Web Preview */}
-          {webPreview && (
+          {/* Wikipedia Information - Only show if no existing entities found */}
+          {smartSearchResult && smartSearchResult.success && smartSearchResult.wikipedia && (!instantResults?.results || instantResults.results.length === 0) && (
             <div className="border-b border-gray-100">
               <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-blue-50">
                 <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                  <ExternalLink className="w-4 h-4 text-green-500" />
-                  <span>Web Preview</span>
+                  <Globe className="w-4 h-4 text-green-500" />
+                  <span>Wikipedia Information</span>
                 </div>
               </div>
-              <WebPreviewCard
-                data={webPreview}
-                onAddToRevuo={handleAddToRevuo}
-              />
+              
+              <div className="p-4">
+                <div className="flex items-start space-x-4">
+                  {smartSearchResult.wikipedia.thumbnail && (
+                    <img
+                      src={smartSearchResult.wikipedia.thumbnail}
+                      alt={smartSearchResult.wikipedia.title}
+                      className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      {smartSearchResult.wikipedia.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                      {smartSearchResult.wikipedia.description}
+                    </p>
+                    <div className="flex items-center space-x-3">
+                      {smartSearchResult.wikipedia.url && (
+                        <a
+                          href={smartSearchResult.wikipedia.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          Read on Wikipedia
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleAddToRevuo({
+                          name: smartSearchResult.wikipedia.title,
+                          description: smartSearchResult.wikipedia.description,
+                          category: 'place',
+                          website: smartSearchResult.wikipedia.url,
+                          logoUrl: smartSearchResult.wikipedia.thumbnail
+                        })}
+                        className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add to Revuo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
           {/* No Results */}
-          {!instantLoading && !isLoadingExternal && (!instantResults?.results || instantResults.results.length === 0) && !webPreview && query.length >= 2 && (
+          {!instantLoading && !isLoadingExternal && (!instantResults?.results || instantResults.results.length === 0) && !smartSearchResult && query.length >= 2 && (
             <div className="p-6 text-center">
               <div className="text-gray-500 mb-4">No results found for "{query}"</div>
               <button

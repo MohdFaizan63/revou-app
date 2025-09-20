@@ -10,7 +10,9 @@ const getEntities = async (req, res) => {
   try {
     // Check if database is connected
     if (mongoose.connection.readyState !== 1) {
-      return res.json({
+      console.warn('Database not connected, returning empty results');
+      return res.status(503).json({
+        message: 'Database temporarily unavailable',
         entities: [],
         pagination: {
           current: 1,
@@ -396,7 +398,7 @@ const getCategories = async (req, res) => {
 const toggleBookmark = async (req, res) => {
   try {
     const entityId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     // Check if entity exists
     const entity = await Entity.findById(entityId);
@@ -428,7 +430,7 @@ const toggleBookmark = async (req, res) => {
 const checkBookmark = async (req, res) => {
   try {
     const entityId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const isBookmarked = await Bookmark.isBookmarked(userId, entityId);
     res.json({ bookmarked: isBookmarked });

@@ -110,10 +110,10 @@ const Profile = () => {
 
   // Fetch user reviews
   const { data: reviewsData, isLoading: reviewsLoading } = useQuery(
-    ['user-reviews', user?.id],
-    getUserReviews,
+    ['user-reviews', user?._id],
+    () => getUserReviews(),
     {
-      enabled: !!user?.id,
+      enabled: !!user?._id,
       staleTime: 5 * 60 * 1000,
       retry: 2,
       onError: (error) => {
@@ -124,10 +124,10 @@ const Profile = () => {
 
   // Fetch user bookmarks
   const { data: bookmarksData, isLoading: bookmarksLoading } = useQuery(
-    ['user-bookmarks', user?.id],
-    getUserBookmarks,
+    ['user-bookmarks', user?._id],
+    () => getUserBookmarks(),
     {
-      enabled: !!user?.id,
+      enabled: !!user?._id,
       staleTime: 5 * 60 * 1000,
       retry: 2,
       onError: (error) => {
@@ -138,10 +138,10 @@ const Profile = () => {
 
   // Fetch user activity
   const { data: activityData, isLoading: activityLoading } = useQuery(
-    ['user-activity', user?.id],
-    getUserActivity,
+    ['user-activity', user?._id],
+    () => getUserActivity(),
     {
-      enabled: !!user?.id,
+      enabled: !!user?._id,
       staleTime: 5 * 60 * 1000,
       retry: 2,
       onError: (error) => {
@@ -158,7 +158,11 @@ const Profile = () => {
         toast.success('Profile updated successfully!')
         updateProfile(data.user)
         setIsEditing(false)
+        // Invalidate all user-related queries
         queryClient.invalidateQueries(['user-profile'])
+        queryClient.invalidateQueries(['user-reviews'])
+        queryClient.invalidateQueries(['user-bookmarks'])
+        queryClient.invalidateQueries(['user-activity'])
       },
       onError: (error) => {
         toast.error(error.message || 'Failed to update profile')
@@ -227,10 +231,18 @@ const Profile = () => {
 
     setIsUploading(true)
     try {
-      await uploadPhotoMutation.mutateAsync({
-        file: profilePhoto,
-        url: photoUrl
-      })
+      const uploadData = {}
+      if (profilePhoto) {
+        uploadData.file = profilePhoto
+      }
+      if (photoUrl) {
+        uploadData.url = photoUrl
+      }
+      
+      await uploadPhotoMutation.mutateAsync(uploadData)
+    } catch (error) {
+      console.error('Photo upload error:', error)
+      toast.error(error.message || 'Failed to upload photo')
     } finally {
       setIsUploading(false)
     }
@@ -265,6 +277,15 @@ const Profile = () => {
       : 0,
     totalLikes: reviewsData?.reviews?.reduce((sum, review) => sum + (review.upvotes || 0), 0) || 0
   }
+
+  // Debug logging
+  console.log('Profile Debug:', {
+    user: user?._id,
+    reviewsData,
+    bookmarksData,
+    activityData,
+    userStats
+  })
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },

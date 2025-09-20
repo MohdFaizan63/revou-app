@@ -36,6 +36,14 @@ export const apiRequest = async (url, options = {}) => {
     config.body = JSON.stringify(options.data)
     config.headers['Content-Type'] = 'application/json'
   }
+  
+  // Handle body parameter for JSON requests
+  if (options.body && !options.data) {
+    config.body = options.body
+    if (typeof options.body === 'string') {
+      config.headers['Content-Type'] = 'application/json'
+    }
+  }
 
   try {
     const response = await fetch(fullUrl, config)

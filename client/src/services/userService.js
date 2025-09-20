@@ -35,8 +35,14 @@ export const uploadAvatar = async (avatarData) => {
   })
   
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || 'Failed to upload avatar')
+    let errorMessage = 'Failed to upload avatar'
+    try {
+      const error = await response.json()
+      errorMessage = error.message || errorMessage
+    } catch (e) {
+      errorMessage = `HTTP error! status: ${response.status}`
+    }
+    throw new Error(errorMessage)
   }
   
   return response.json()

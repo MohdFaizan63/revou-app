@@ -76,19 +76,26 @@ const uploadAvatar = async (req, res) => {
     let avatarUrl = ''
 
     if (req.file) {
-      // Convert buffer to base64 for Cloudinary
-      const b64 = Buffer.from(req.file.buffer).toString('base64')
-      const dataURI = `data:${req.file.mimetype};base64,${b64}`
-      
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: 'revuo/avatars',
-        width: 400,
-        height: 400,
-        crop: 'fill',
-        quality: 'auto'
-      })
-      avatarUrl = result.secure_url
+      // Check if Cloudinary is configured
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+        // Convert buffer to base64 for Cloudinary
+        const b64 = Buffer.from(req.file.buffer).toString('base64')
+        const dataURI = `data:${req.file.mimetype};base64,${b64}`
+        
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(dataURI, {
+          folder: 'revuo/avatars',
+          width: 400,
+          height: 400,
+          crop: 'fill',
+          quality: 'auto'
+        })
+        avatarUrl = result.secure_url
+      } else {
+        // Fallback to base64 data URL
+        const b64 = Buffer.from(req.file.buffer).toString('base64')
+        avatarUrl = `data:${req.file.mimetype};base64,${b64}`
+      }
     } else if (req.body.avatarUrl) {
       // Use provided URL
       avatarUrl = req.body.avatarUrl
@@ -97,7 +104,7 @@ const uploadAvatar = async (req, res) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user._id,
       { avatar: avatarUrl },
       { new: true }
     ).select('-password')

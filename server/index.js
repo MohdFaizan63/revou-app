@@ -47,6 +47,7 @@ const reviewRoutes = require('./routes/reviews');
 const userRoutes = require('./routes/users');
 const contactRoutes = require('./routes/contact');
 const postRoutes = require('./routes/posts');
+const seedRoutes = require('./routes/seed');
 
 const app = express();
 
@@ -118,6 +119,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -264,7 +266,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/revuo', m
   });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+/*process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
   mongoose.connection.close(() => {
     console.log('MongoDB connection closed');
@@ -278,4 +280,28 @@ process.on('SIGINT', () => {
     console.log('MongoDB connection closed');
     process.exit(0);
   });
+});    */
+
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error closing MongoDB connection', err);
+    process.exit(1);
+  }
+});
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, shutting down gracefully');
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error closing MongoDB connection', err);
+    process.exit(1);
+  }
 });

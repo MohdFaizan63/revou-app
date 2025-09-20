@@ -86,6 +86,7 @@ const Home = () => {
     setShowAddModal(true)
   }
 
+
   const handleAddAnything = () => {
     setAddModalData(null)
     setShowAddModal(true)
@@ -217,8 +218,8 @@ const Home = () => {
               </p>
             </div>
 
-            {/* Search Bar - Initial position below navigation */}
-            <div className="max-w-2xl mx-auto mb-12">
+            {/* Search Bar */}
+            <div className="max-w-4xl mx-auto mb-12">
               <SearchBar onAddToRevuo={handleAddToRevuo} />
             </div>
 
@@ -555,6 +556,7 @@ const Home = () => {
           setAddModalData(null)
         }}
       />
+
     </div>
   )
 }

@@ -10,22 +10,36 @@ const ReviewForm = ({ entity, initialRating = 0, onSubmit, onClose, isLoading })
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    
+    // Validate rating
     if (rating === 0) {
       alert('Please select a rating')
       return
     }
+    
+    // Validate title
     if (!title.trim()) {
       alert('Please enter a title')
       return
     }
     
-    onSubmit({
+    // Validate entity
+    if (!entity || !entity._id) {
+      alert('Invalid entity. Please refresh the page and try again.')
+      return
+    }
+    
+    // Prepare data
+    const reviewData = {
       entityId: entity._id,
-      rating,
+      rating: parseInt(rating),
       title: title.trim(),
-      comment: comment.trim(),
-      tags
-    })
+      comment: comment ? comment.trim() : '',
+      tags: Array.isArray(tags) ? tags : []
+    }
+    
+    console.log('Submitting review data:', reviewData)
+    onSubmit(reviewData)
   }
 
   const addTag = (tag) => {

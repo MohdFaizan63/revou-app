@@ -111,42 +111,4 @@ export const checkBookmark = async (id) => {
   return response.json()
 }
 
-// Review functions
-export const createReview = async (reviewData) => {
-  const response = await apiRequest('/api/reviews', {
-    method: 'POST',
-    body: JSON.stringify(reviewData),
-  })
-  return response.json()
-}
-
-export const updateReview = async (id, reviewData) => {
-  const response = await apiRequest(`/api/reviews/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(reviewData),
-  })
-  return response.json()
-}
-
-export const deleteReview = async (id) => {
-  const response = await apiRequest(`/api/reviews/${id}`, {
-    method: 'DELETE',
-  })
-  return response.json()
-}
-
-// Voting functions
-export const voteReview = async ({ reviewId, voteType }) => {
-  const response = await apiRequest(`/api/reviews/${reviewId}/vote`, {
-    method: 'POST',
-    body: JSON.stringify({ voteType }),
-  })
-  return response.json()
-}
-
-export const removeVote = async (reviewId) => {
-  const response = await apiRequest(`/api/reviews/${reviewId}/vote`, {
-    method: 'DELETE',
-  })
-  return response.json()
-}
+// Note: Review functions have been moved to reviewService.js

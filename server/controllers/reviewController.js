@@ -6,6 +6,17 @@ const createReview = async (req, res) => {
   try {
     const { entityId, rating, title, comment, tags } = req.body
 
+    // Validate required fields
+    if (!entityId) {
+      return res.status(400).json({ message: 'Entity ID is required' })
+    }
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Valid rating (1-5) is required' })
+    }
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ message: 'Review title is required' })
+    }
+
     // Check if user already reviewed this entity
     const existingReview = await Review.findOne({
       entity: entityId,
@@ -20,9 +31,9 @@ const createReview = async (req, res) => {
     const review = await Review.create({
       entity: entityId,
       user: req.user._id,
-      rating,
-      title,
-      comment,
+      rating: parseInt(rating),
+      title: title.trim(),
+      comment: comment ? comment.trim() : '',
       tags: tags || []
     })
 
@@ -191,9 +202,19 @@ const updateEntityRating = async (entityId) => {
   try {
     const { averageRating, totalReviews } = await Review.getAverageRating(entityId)
     
+    // Recalculate rating distribution
+    const reviews = await Review.find({ entity: entityId })
+    const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+    
+    reviews.forEach(review => {
+      distribution[review.rating] = (distribution[review.rating] || 0) + 1
+    })
+    
+    // Use findByIdAndUpdate to avoid parallel save issues
     await Entity.findByIdAndUpdate(entityId, {
-      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
-      totalReviews
+      averageRating: Math.round(averageRating * 10) / 10,
+      totalReviews: totalReviews,
+      ratingDistribution: distribution
     })
   } catch (error) {
     console.error('Update entity rating error:', error)
